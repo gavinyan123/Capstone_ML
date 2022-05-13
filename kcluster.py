@@ -361,7 +361,7 @@ class LogisticRegress:
         self.iters = iters
     
     def sigmoid(self, z):
-        return 1/(1+np.exp(-z))
+        return np.exp(z)/(1+np.exp(-z))
     
     def fit(self, x, y):
         #m = number of data points
@@ -387,7 +387,7 @@ class LogisticRegress:
             #update weights
             self.w = self.w - self.lr * dw
             self.b = self.b - self.lr * db
-            
+        return self.w, self.b
 
     # def update_weights(self):
     #     y_hat = self.sigmoid(np.dot(self.x ,self.w) + self.b)
@@ -455,12 +455,14 @@ if __name__ == "__main__":
     e, c = means_K.clustering(3)
     cluster_copy = copy.deepcopy(c)
     cluster_for_log = majority_cluster(cluster_copy, 3)
-    logReg.fit(new_X, cluster_for_log['outcome'])
-
+    weight, bias = logReg.fit(new_X, cluster_for_log['outcome'])
+    
     predict, predicts = logReg.predict(new_X)
 
+    print(predict, predicts)
+
     plt.scatter(new_X['rad'], cluster_for_log['outcome'])
-    plt.plot(new_X['rad'], predicts)
+    plt.plot(new_X['rad'], predict)
     plt.show()
 
     accurate = accuracy_score(predicts, cluster_for_log['outcome'])
