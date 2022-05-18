@@ -361,7 +361,7 @@ class LogisticRegress:
         self.iters = iters
     
     def sigmoid(self, z):
-        return np.exp(z)/(1+np.exp(-z))
+        return 1/(1+np.exp(-z))
     
     def fit(self, x, y):
         #m = number of data points
@@ -455,8 +455,7 @@ if __name__ == "__main__":
     e, c = means_K.clustering(3)
     cluster_copy = copy.deepcopy(c)
     cluster_for_log = majority_cluster(cluster_copy, 3)
-    weight, bias = logReg.fit(new_X, cluster_for_log['outcome'])
-    
+    weights, bias = logReg.fit(new_X, cluster_for_log['outcome'])
     predict, predicts = logReg.predict(new_X)
 
     print(predict, predicts)
