@@ -1,3 +1,3 @@
 # Capstone_ML
 
-complete log regression
+kernelization for logistic regression needed
