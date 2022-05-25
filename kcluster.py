@@ -359,7 +359,7 @@ x1 = delta(Z)/delta(w)
 '''
 
 class LogisticRegress:
-    def __init__(self, lr = 0.0000008, iters = 1000):
+    def __init__(self, lr = 0.00001, iters = 1000):
         self.lr = lr
         self.iters = iters
     
@@ -381,6 +381,8 @@ class LogisticRegress:
         dw=0
         db=0
 
+        cost_arr = []
+
         #gradient descent
         for i in range(self.iters):
             for j in range(self.m):
@@ -398,7 +400,9 @@ class LogisticRegress:
                 #update weights
                 self.w = self.w - (self.lr * dw)
                 self.b = self.b - (self.lr * db)
-        return self.w, self.b
+            cost = self.cost(self.sigmoid((self.w * x)+ self.b))
+            cost_arr.append(cost)
+        return self.w, self.b, cost_arr
     # def update_weights(self):
     #     y_hat = self.sigmoid(np.dot(self.x ,self.w) + self.b)
 
@@ -415,6 +419,13 @@ class LogisticRegress:
         y_pred = self.sigmoid(x*w + b)
         y_preds = np.where(y_pred > 0.5, 1,0)
         return y_pred, y_preds
+
+    def cost(self, y_pred):
+        cost = 0
+        for i in range(len(self.y)):
+            y = self.y[i]
+            cost = cost + ((y*np.log(y_pred)) + (1-y)*np.log(1-y_pred))/(-len(self.y))
+        return cost
 
 names_n = ['id_num', 'outcome', 'rad', 'texture', 'perim', 'area', 'smooth', 'compact', 'concave', 'concave_points',
             'sym', 'fractal_dim', \
@@ -455,24 +466,27 @@ if __name__ == "__main__":
     plt.show()
 
     lin = LinearRegress(new_X, 'rad', 'smooth', 0.0001, 1000)
-    logRegLine = LinearRegress(X, 'rad', 'outcome', 0.0001, 1000)
+    logLine = LinearRegress(X, 'rad', 'outcome', 0.0001, 1000)
     kmeans = kcluster(X, 'rad', 'smooth')
     means_K = kcluster(X, 'rad', 'smooth') 
 
     #Logistic Regression
     logReg = LogisticRegress()
     
-    e, c = means_K.clustering(3)
+    e, c = means_K.clustering(4)
     cluster_copy = copy.deepcopy(c)
     cluster_for_log = majority_cluster(cluster_copy, 3)
-    weights, bias = logReg.fit(new_X['rad'], cluster_for_log['outcome'])
+    weights, bias, cost = logReg.fit(new_X['rad'], cluster_for_log['outcome'])
     predict, predicts = logReg.predict(new_X['rad'], weights, bias)
-
-    print(predict, predicts)
 
     plt.scatter(new_X['rad'], cluster_for_log['outcome'])
     plt.plot(new_X['rad'],  logReg.sigmoid(new_X['rad']*weights + bias), c = 'red')
     plt.title("Logistic Regression")
+    plt.show()
+
+    print(cost)
+    cost = np.array(cost, dtype=float)
+    plt.plot(cost)
     plt.show()
 
     accurate = accuracy_score(predicts, cluster_for_log['outcome'])
@@ -496,11 +510,11 @@ if __name__ == "__main__":
     plt.title("Linear Regression(Gradient Descent)")
     plt.show()
 
-    b2, m2 = logRegLine.gradient_descent()
-    z = (m2*new_X['rad']) + b2
-    sig = 1/(1+np.exp(-z))
-    plt.scatter(new_X['rad'], X['outcome'])
-    plt.plot(new_X['rad'], sig)
+    e, d = logLine.gradient_descent()
+    plt.scatter(X['rad'], X['outcome'])
+    plt.plot(X['rad'], e + d*X['rad'],c = 'r', linewidth=1.5, markersize=4)
+    plt.xlabel('rad')
+    plt.ylabel('smooth')
     plt.show()
 
     og_strat = stratify(X, 'outcome', 150)
@@ -518,10 +532,10 @@ if __name__ == "__main__":
         elbow, cluster = kmeans.clustering(repeat)
         use_cluster = copy.deepcopy(cluster)
         elbow_points = elbow[2:10]
-        plt.plot(range(len(elbow_points)), elbow_points,'go--', linewidth=1.5, markersize=4)
-        plt.xlabel("Iterations")
-        plt.ylabel("Sum Squares")
-        plt.show()
+        # plt.plot(range(len(elbow_points)), elbow_points,'go--', linewidth=1.5, markersize=4)
+        # plt.xlabel("Iterations")
+        # plt.ylabel("Sum Squares")
+        # plt.show()
         new_cluster = majority_cluster(use_cluster, repeat)
         nc_strat = stratify(new_cluster, 'outcome', 150)
 
@@ -530,12 +544,12 @@ if __name__ == "__main__":
         accuracy_data.append(list_acc)
         average_data.append(list_avg)
 
-    plt.plot(range(2,10), accuracy_data,'go--', linewidth=1.5, markersize=4)
+    plt.plot(range(1,9), accuracy_data,'go--', linewidth=1.5, markersize=4)
     plt.xlabel("Iterations")
     plt.ylabel("Accuracy")
     plt.show()
 
-    plt.plot(range(2,10), average_data,'go--', linewidth=1.5, markersize=4)
+    plt.plot(range(1,9), average_data,'go--', linewidth=1.5, markersize=4)
     plt.xlabel("Iterations")
     plt.ylabel("Accuracy")
     plt.show()
